@@ -13,6 +13,8 @@
 *.H5
 *.pb
 
+data
+*.h5
 __pychache__
 my_model.*
 export
