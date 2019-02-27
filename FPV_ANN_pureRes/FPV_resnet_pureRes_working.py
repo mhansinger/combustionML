@@ -11,9 +11,10 @@ from keras.layers import Dense, Input, Dropout
 from keras.callbacks import ModelCheckpoint
 
 
-from utils.resBlock import res_block
-from utils.data_reader import read_hdf_data, read_hdf_data_psi
+from utils.resBlock import res_block, res_block_org
+from utils.data_reader import read_hdf_data, read_hdf_data_psi, read_h5_data
 from utils.writeANNProperties import writeANNProperties
+from utils.customObjects import coeff_r2, SGDRScheduler
 from keras import backend as K
 from keras.models import load_model
 
@@ -21,7 +22,7 @@ import ast
 
 ##########################
 # Parameters
-n_neuron = 100
+n_neuron = 300
 branches = 3
 scale = 3
 batch_size = 1024*1
@@ -36,7 +37,7 @@ scaler = 'Standard' # 'Standard' 'MinMax'
 
 labels = []
 
-with open('GRI_species_order_reduced', 'r') as f:
+with open('GRI_species_order', 'r') as f:
     species = f.readlines()
     for line in species:
         # remove linebreak which is the last character of the string
@@ -49,18 +50,24 @@ with open('GRI_species_order_reduced', 'r') as f:
 labels.append('T')
 labels.append('PVs')
 
-# tabulate psi, mu, alpha
-labels.append('psi')
-labels.append('mu')
-labels.append('alpha')
+# # tabulate psi, mu, alpha
+# labels.append('psi')
+# labels.append('mu')
+# labels.append('alpha')
+
 
 # DO NOT CHANGE THIS ORDER!!
 input_features=['f','zeta','pv']
 
 
 # read in the data
-X, y, df, in_scaler, out_scaler = read_hdf_data('./data/tables_of_fgm.h5',key='of_tables',
-                                                in_labels=input_features, labels = labels,scaler=scaler)
+X, y, df, in_scaler, out_scaler = read_h5_data('./data/tables_of_fgm.h5',
+                                               input_features=input_features,
+                                               labels=labels,
+                                               i_scaler='no',
+                                               o_scaler='cbrt_std')
+                                                #('./data/tables_of_fgm.h5',key='of_tables',
+                                                # in_labels=input_features, labels = labels,scaler=scaler)
 
 # split into train and test data
 X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.01)
@@ -79,43 +86,63 @@ inputs = Input(shape=(dim_input,))#,name='input_1')
 # a layer instance is callable on a tensor, and returns a tensor
 x = Dense(n_neuron, activation='relu')(inputs)
 
-x = res_block(x, scale, n_neuron, stage=1, block='a', bn=batch_norm,branches=branches)
-x = res_block(x, scale, n_neuron, stage=1, block='b', bn=batch_norm,branches=branches)
-x = res_block(x, scale, n_neuron, stage=1, block='c', bn=batch_norm,branches=branches)
+x = res_block_org(x,  n_neuron, stage=1, block='a', bn=batch_norm)
+x = res_block_org(x,  n_neuron, stage=1, block='b', bn=batch_norm)
+x = res_block_org(x,  n_neuron, stage=1,  block='c', bn=batch_norm)
 
 
 predictions = Dense(dim_label, activation='linear')(x)
 
 model = Model(inputs=inputs, outputs=predictions)
-model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
-# get the model summary
-model.summary()
 
-# checkpoint (save the best model based validate loss)
-filepath = "./tmp/weights.best.cntk.hdf5"
+# WARM RESTART
+batch_size_list = [ batch_size*4*4*4 ,batch_size*4*4, batch_size*4, batch_size]
 
-checkpoint = ModelCheckpoint(filepath,
-                             monitor='val_loss',
-                             verbose=1,
-                             save_best_only=True,
-                             mode='min',
-                             period=10)
+for this_batch in batch_size_list:
+    model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+    # get the model summary
+    model.summary()
 
-callbacks_list = [checkpoint]
+    # checkpoint (save the best model based validate loss)
+    filepath = "./tmp/weights.best.cntk.hdf5"
 
-# fit the model
-history = model.fit(
-    X_train, y_train,
-    epochs=epochs,
-    batch_size=batch_size,
-    validation_split=vsplit,
-    verbose=2,
-    callbacks=callbacks_list,
-    shuffle=True)
+    # check if there are weights
+    if os.path.isdir(filepath):
+        model.load_weights(filepath)
+
+    checkpoint = ModelCheckpoint(filepath,
+                                 monitor='val_loss',
+                                 verbose=1,
+                                 save_best_only=True,
+                                 mode='min',
+                                 period=10)
+    epoch_size = X_train.shape[0]
+    a = 0
+    base = 2
+    clc = 2
+    for i in range(8):
+        a += base * clc ** (i)
+    print(a)
+    epochs, c_len = a, base
+    schedule = SGDRScheduler(min_lr=1e-6, max_lr=1e-4,
+                             steps_per_epoch=np.ceil(epoch_size / batch_size),
+                             cycle_length=c_len, lr_decay=0.6, mult_factor=clc)
+
+    callbacks_list = [checkpoint, schedule]
+
+    # fit the model
+    history = model.fit(
+        X_train, y_train,
+        epochs=epochs,
+        batch_size=this_batch,
+        validation_split=vsplit,
+        verbose=2,
+        callbacks=callbacks_list,
+        shuffle=True)
 
 #%%
-model.load_weights("./tmp/weights.best.cntk.hdf5")
-# cntk.combine(model.outputs).save('mayerTest.dnn')
+
+
 
 # # %%
 # ref = df.loc[df['p'] == 40]

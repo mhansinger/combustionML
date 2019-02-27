@@ -86,55 +86,63 @@ inputs = Input(shape=(dim_input,))#,name='input_1')
 # a layer instance is callable on a tensor, and returns a tensor
 x = Dense(n_neuron, activation='relu')(inputs)
 
-x = res_block_org(x, scale, n_neuron,  block='a', bn=batch_norm)
-x = res_block_org(x, scale, n_neuron,  block='b', bn=batch_norm)
-x = res_block_org(x, scale, n_neuron,  block='c', bn=batch_norm)
+x = res_block_org(x,  n_neuron, stage=1, block='a', bn=batch_norm)
+x = res_block_org(x,  n_neuron, stage=1, block='b', bn=batch_norm)
+x = res_block_org(x,  n_neuron, stage=1,  block='c', bn=batch_norm)
 
 
 predictions = Dense(dim_label, activation='linear')(x)
 
 model = Model(inputs=inputs, outputs=predictions)
-model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
-# get the model summary
-model.summary()
 
-# checkpoint (save the best model based validate loss)
-filepath = "./tmp/weights.best.cntk.hdf5"
+# WARM RESTART
+batch_size_list = [ batch_size*4*4*4 ,batch_size*4*4, batch_size*4, batch_size]
 
-checkpoint = ModelCheckpoint(filepath,
-                             monitor='val_loss',
-                             verbose=1,
-                             save_best_only=True,
-                             mode='min',
-                             period=10)
-epoch_size = X_train.shape[0]
-a = 0
-base = 2
-clc = 2
-for i in range(8):
-    a += base * clc ** (i)
-print(a)
-epochs, c_len = a, base
-schedule = SGDRScheduler(min_lr=1e-6, max_lr=1e-4,
-                         steps_per_epoch=np.ceil(epoch_size / batch_size),
-                         cycle_length=c_len, lr_decay=0.6, mult_factor=clc)
+for this_batch in batch_size_list:
+    model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+    # get the model summary
+    model.summary()
 
-callbacks_list = [checkpoint,schedule]
+    # checkpoint (save the best model based validate loss)
+    filepath = "./tmp/weights.best.cntk.hdf5"
 
+    # check if there are weights
+    if os.path.isdir(filepath):
+        model.load_weights(filepath)
 
-# fit the model
-history = model.fit(
-    X_train, y_train,
-    epochs=epochs,
-    batch_size=batch_size,
-    validation_split=vsplit,
-    verbose=2,
-    callbacks=callbacks_list,
-    shuffle=False)
+    checkpoint = ModelCheckpoint(filepath,
+                                 monitor='val_loss',
+                                 verbose=1,
+                                 save_best_only=True,
+                                 mode='min',
+                                 period=10)
+    epoch_size = X_train.shape[0]
+    a = 0
+    base = 2
+    clc = 2
+    for i in range(8):
+        a += base * clc ** (i)
+    print(a)
+    epochs, c_len = a, base
+    schedule = SGDRScheduler(min_lr=1e-6, max_lr=1e-4,
+                             steps_per_epoch=np.ceil(epoch_size / batch_size),
+                             cycle_length=c_len, lr_decay=0.6, mult_factor=clc)
+
+    callbacks_list = [checkpoint, schedule]
+
+    # fit the model
+    history = model.fit(
+        X_train, y_train,
+        epochs=epochs,
+        batch_size=this_batch,
+        validation_split=vsplit,
+        verbose=2,
+        callbacks=callbacks_list,
+        shuffle=True)
 
 #%%
-model.load_weights("./tmp/weights.best.cntk.hdf5")
-# cntk.combine(model.outputs).save('mayerTest.dnn')
+
+
 
 # # %%
 # ref = df.loc[df['p'] == 40]
