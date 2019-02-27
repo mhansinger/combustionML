@@ -27,7 +27,8 @@ class data_scaler(object):
             'log': 'log',
             'log_min':'log_min',
             'log2': 'log2',
-            'tan': 'tan'
+            'tan': 'tan',
+            'cbrt_std': 'cbrt_std',
         }
 
     def fit_transform(self, input_data, case):
@@ -81,6 +82,11 @@ class data_scaler(object):
             out = self.norm.fit_transform(out)
             out = np.tan(out / (2 * np.pi + self.bias))
 
+        if self.switcher.get(self.case) == 'cbrt_std':
+            out = np.cbrt(np.asarray(input_data / self.scale))
+            self.std = StandardScaler()
+            out = self.std.fit_transform(out)
+
         return out
 
     def transform(self, input_data):
@@ -119,7 +125,12 @@ class data_scaler(object):
             out = self.norm.transform(out)
             out = np.tan(out / (2 * np.pi + self.bias))
 
+        if self.switcher.get(self.case) == 'cbrt_std':
+            out = np.cbrt(np.asarray(input_data / self.scale))
+            out = self.std.transform(out)
+
         return out
+
 
     def inverse_transform(self, input_data):
 
@@ -158,7 +169,12 @@ class data_scaler(object):
             out = self.norm.inverse_transform(out)
             out = self.std.inverse_transform(out)
 
+        if self.switcher.get(self.case) == 'cbrt_std':
+            out = self.std.inverse_transform(input_data)
+            out = np.power(out, 3) * self.scale
+
         return out
+
 
 def read_csv_data(path = 'premix_data', labels = ['T','CH4','O2','CO2','CO','H2O','H2','OH','PVs']):
     df = pd.DataFrame()
@@ -185,6 +201,7 @@ def read_csv_data(path = 'premix_data', labels = ['T','CH4','O2','CO2','CO','H2O
     # print('*******************************\n')
     return input_np, label_np, df, in_scaler, out_scaler
 
+
 def read_h5_data(fileName, input_features=['zeta','f','pv'], labels = ['T','CH4','O2','CO2','CO','H2O','H2','OH','PVs'],i_scaler='no',o_scaler='no'):
     df = pd.read_hdf(fileName)
 
@@ -200,7 +217,8 @@ def read_h5_data(fileName, input_features=['zeta','f','pv'], labels = ['T','CH4'
 
     return input_np, label_np, df, in_scaler, out_scaler
 
-def read_hdf_data(path = 'premix_data',key='of_tables',in_labels=['zeta','f','pv'], labels = ['T'],scaler=None):
+
+def read_hdf_data(path = 'premix_data',key='of_tables',in_labels=['zeta','f','pv'], labels = ['T'],i_scaler='no',o_scaler='no'):
     # read in the hdf5 file
     try:
         df = pd.read_hdf(path,key=key) 
@@ -208,23 +226,28 @@ def read_hdf_data(path = 'premix_data',key='of_tables',in_labels=['zeta','f','pv
         print('Check the data path and key') 
 
     input_df=df[in_labels]
-
-    if scaler=='MinMax':
-        in_scaler = preprocessing.MinMaxScaler()
-        out_scaler = preprocessing.MinMaxScaler()
-    elif scaler=='Standard':
-        in_scaler = preprocessing.StandardScaler()
-        out_scaler = preprocessing.StandardScaler()
-    else:
-        raise ValueError('Only possible scalers are: MinMax or Standard.')
-
-    input_np = in_scaler.fit_transform(input_df)
+    in_scaler = data_scaler()
+    input_np = in_scaler.fit_transform(input_df,i_scaler)
 
     label_df=df[labels]
+    out_scaler = data_scaler()
+    label_np = out_scaler.fit_transform(label_df,o_scaler)
 
-    label_np = out_scaler.fit_transform(label_df)
+    # if scaler=='MinMax':
+    #     in_scaler = preprocessing.MinMaxScaler()
+    #     out_scaler = preprocessing.MinMaxScaler()
+    # elif scaler=='Standard':
+    #     in_scaler = preprocessing.StandardScaler()
+    #     out_scaler = preprocessing.StandardScaler()
+    # else:
+    #     raise ValueError('Only possible scalers are: MinMax or Standard.')
+
+    # label_df=df[labels]
+    #
+    # label_np = out_scaler.fit_transform(label_df)
+
     print('\n*******************************')
-    print('The scaler is %s\n' % scaler)
+    print('The out_scaler is %s\n' % i_scaler)
     print('This is the order of the labels:')
     [print(f) for f in labels]
     print('*******************************\n')
