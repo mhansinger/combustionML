@@ -4,6 +4,7 @@ from keras import layers
 from keras.callbacks import ModelCheckpoint
 
 
+
 def res_block_org(input_tensor, n_neuron, stage, block, bn=False):
     conv_name_base = 'res' + str(stage) + block + '_branch'
     bn_name_base = 'bn' + str(stage) + block + '_branch'
@@ -22,6 +23,7 @@ def res_block_org(input_tensor, n_neuron, stage, block, bn=False):
     x = Dropout(0.)(x)
 
     return x
+
 
 
 def res_branch(bi, conv_name_base, bn_name_base, scale, input_tensor, n_neuron, stage, block, dp1, bn=False):
