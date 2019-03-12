@@ -9,7 +9,7 @@ def writeANNProperties(in_scaler,out_scaler,scaler):
     ANNProperties = open('ANNProperties/ANNProperties_'+scaler, 'w')
 
     try:
-        with open('ANNProperties/top', encoding='utf-8') as f:
+        with open('ANNProperties/ANNProperties_HEADER', encoding='utf-8') as f:
             for line in f.readlines():
                 ANNProperties.write(line)
     except:

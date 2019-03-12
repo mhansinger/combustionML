@@ -19,14 +19,15 @@ from keras import backend as K
 from keras.models import load_model
 
 import ast
+import time
 
 ##########################
 # Parameters
-n_neuron = 300
+n_neuron = 250
 branches = 3
 scale = 3
-batch_size = 1024*1
-epochs = 2000
+batch_size = 1024 #512
+this_epoch = 5000
 vsplit = 0.1
 batch_norm = False
 
@@ -37,7 +38,7 @@ scaler = 'Standard' # 'Standard' 'MinMax'
 
 labels = []
 
-with open('GRI_species_order', 'r') as f:
+with open('GRI_species_order_lu13', 'r') as f:
     species = f.readlines()
     for line in species:
         # remove linebreak which is the last character of the string
@@ -64,7 +65,7 @@ input_features=['f','zeta','pv']
 X, y, df, in_scaler, out_scaler = read_h5_data('./data/tables_of_fgm.h5',
                                                input_features=input_features,
                                                labels=labels,
-                                               i_scaler='no',
+                                               i_scaler='std2',
                                                o_scaler='cbrt_std')
                                                 #('./data/tables_of_fgm.h5',key='of_tables',
                                                 # in_labels=input_features, labels = labels,scaler=scaler)
@@ -89,6 +90,7 @@ x = Dense(n_neuron, activation='relu')(inputs)
 x = res_block_org(x,  n_neuron, stage=1, block='a', bn=batch_norm)
 x = res_block_org(x,  n_neuron, stage=1, block='b', bn=batch_norm)
 x = res_block_org(x,  n_neuron, stage=1,  block='c', bn=batch_norm)
+# x = res_block_org(x,  n_neuron, stage=1,  block='d', bn=batch_norm)
 
 
 predictions = Dense(dim_label, activation='linear')(x)
@@ -96,9 +98,14 @@ predictions = Dense(dim_label, activation='linear')(x)
 model = Model(inputs=inputs, outputs=predictions)
 
 # WARM RESTART
-batch_size_list = [ batch_size*4*4*4 ,batch_size*4*4, batch_size*4, batch_size]
+batch_size_list = [ batch_size]
+
+epoch_factor = 1
+
+t_start = time.time()
 
 for this_batch in batch_size_list:
+
     model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
     # get the model summary
     model.summary()
@@ -133,13 +140,16 @@ for this_batch in batch_size_list:
     # fit the model
     history = model.fit(
         X_train, y_train,
-        epochs=epochs,
+        epochs=this_epoch, #* epoch_factor,
         batch_size=this_batch,
         validation_split=vsplit,
         verbose=2,
         callbacks=callbacks_list,
         shuffle=True)
 
+    epoch_factor += 1
+
+t_end = time.time()
 #%%
 
 
@@ -154,6 +164,15 @@ X_test_df = pd.DataFrame(in_scaler.inverse_transform(X_test),columns=input_featu
 y_test_df = pd.DataFrame(out_scaler.inverse_transform(y_test),columns=labels)
 
 sp='PVs'
+
+predict_df = pd.DataFrame(out_scaler.inverse_transform(predict_val), columns=labels)
+
+# for sp in labels:
+#     plt.figure()
+#     plt.scatter(predict_df[sp], y_test_df[sp], s=1)
+#     plt.title('R2 for ' + sp)
+#     plt.savefig('./exported/R2_%s_%s_%i.eps' % (sp, scaler, n_neuron), format='eps')
+#     plt.show(block=False)
 
 # loss
 fig = plt.figure()
@@ -193,10 +212,12 @@ pred_data.to_hdf('sim_check.H5',key='pred')
 sess = K.get_session()
 saver = tf.train.Saver(tf.global_variables())
 saver.save(sess, './exported/my_model')
-model.save('FPV_ANN_tabulated_%s.H5' % scaler)
+model.save('FPV_ANN_tabulated_%s_%i.H5' % (scaler,n_neuron))
 
 # write the OpenFOAM ANNProperties file
 writeANNProperties(in_scaler,out_scaler,scaler)
+
+print('Training took %i sec.' % (t_end-t_start) )
 
 # Convert the model to
 #run -i k2tf.py --input_model='FPV_ANN_tabulated_Standard.H5' --output_model='exported/FPV_ANN_tabulated_Standard.pb'

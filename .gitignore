@@ -20,4 +20,6 @@ my_model.*
 export
 fgm_tables
 
+*_Block_Nets
+
 pre.ipynb
