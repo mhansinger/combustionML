@@ -23,7 +23,7 @@ import time
 
 ##########################
 # Parameters
-n_neuron = 250
+n_neuron = 500
 branches = 3
 scale = 3
 batch_size = 1024 #512
@@ -36,20 +36,19 @@ scaler = 'Standard' # 'Standard' 'MinMax'
 
 ##########################
 
-labels = []
-
+# read in the species order
 with open('GRI_species_order_lu13', 'r') as f:
-    species = f.readlines()
-    for line in species:
-        # remove linebreak which is the last character of the string
-        current_place = line[:-1]
-        # add item to the list
-        labels.append(current_place)
+    # species = f.readlines()
+    # print(species)
+    labels = f.read().splitlines()
 
 # append other fields: heatrelease,  T, PVs
-#labels.append('heatRelease')
+# labels.append('heatRelease')
 labels.append('T')
 labels.append('PVs')
+
+print('The labels are:')
+print(labels)
 
 # # tabulate psi, mu, alpha
 # labels.append('psi')
@@ -218,6 +217,11 @@ model.save('FPV_ANN_tabulated_%s_%i.H5' % (scaler,n_neuron))
 writeANNProperties(in_scaler,out_scaler,scaler)
 
 print('Training took %i sec.' % (t_end-t_start) )
+
+
+# save the loss history
+losses_df = pd.DataFrame(np.array([history.history['acc'],history.history['val_acc']]).T,columns=['acc','val_acc'])
+losses_df.to_csv('3_Block_Nets/losses_%i_%iepochs.csv' % (n_neuron, this_epoch))
 
 # Convert the model to
 #run -i k2tf.py --input_model='FPV_ANN_tabulated_Standard.H5' --output_model='exported/FPV_ANN_tabulated_Standard.pb'

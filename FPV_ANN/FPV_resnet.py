@@ -29,15 +29,19 @@ from utils.AdamW import AdamW
 #        'HCO', 'NO2', 'OH', 'HCNO', 'CH3CHO', 'CH3', 'NH', 'alpha', 'CH3O',
 #        'CO2', 'CH3OH', 'CH2CHO', 'CH2O', 'C3H8', 'HNO', 'NH2', 'HCN', 'H', 'N',
 #        'H2O', 'HCCOH', 'HCNN']
-labels = []
+# read in the species order
+with open('GRI_species_order_lu13', 'r') as f:
+    # species = f.readlines()
+    # print(species)
+    labels = f.read().splitlines()
 
-with open('GRI_species_order', 'r') as f:
-    species = f.readlines()
-    for line in species:
-        # remove linebreak which is the last character of the string
-        current_place = line[:-1]
-        # add item to the list
-        labels.append(current_place)
+# append other fields: heatrelease,  T, PVs
+# labels.append('heatRelease')
+labels.append('T')
+labels.append('PVs')
+
+print('The labels are:')
+print(labels)
 
 # append other fields: heatrelease,  T, PVs
 # labels.append('heatRelease')
