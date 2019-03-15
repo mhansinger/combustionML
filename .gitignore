@@ -1,7 +1,7 @@
 #gitignore
 
 *.png
-
+*.eps
 *.csv
 
 *.key
