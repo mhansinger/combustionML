@@ -83,7 +83,7 @@ dim_label = y_train.shape[1]
 inputs = Input(shape=(dim_input,))#,name='input_1')
 
 # a layer instance is callable on a tensor, and returns a tensor
-x = Dense(n_neuron, activation='relu')(inputs)
+x = Dense(n_neuron, activation='relu',name='input_1')(inputs)
 
 x = res_block_org(x,  n_neuron, stage=1, block='a', bn=batch_norm)
 x = res_block_org(x,  n_neuron, stage=1, block='b', bn=batch_norm)
@@ -91,7 +91,7 @@ x = res_block_org(x,  n_neuron, stage=1,  block='c', bn=batch_norm)
 x = res_block_org(x,  n_neuron, stage=1,  block='d', bn=batch_norm)
 
 
-predictions = Dense(dim_label, activation='linear')(x)
+predictions = Dense(dim_label, activation='linear',name='output_1')(x)
 
 model = Model(inputs=inputs, outputs=predictions)
 
@@ -184,7 +184,7 @@ plt.legend(['train', 'test'], loc='upper right')
 plt.savefig('./exported/Loss_%s_%s_%i.eps' % (sp,scaler,n_neuron),format='eps')
 plt.show(block=False)
 
-predict_df = pd.DataFrame(out_scaler.inverse_transform(predict_val), columns=labels)
+#predict_df = pd.DataFrame(out_scaler.inverse_transform(predict_val), columns=labels)
 
 plt.figure()
 plt.title('Error of %s ' % sp)
