@@ -23,7 +23,7 @@ import time
 
 ##########################
 # Parameters
-n_neuron = 500
+n_neuron = 250
 branches = 3
 scale = 3
 batch_size = 1024 #512
@@ -38,7 +38,6 @@ scaler = 'Standard' # 'Standard' 'MinMax'
 
 # read in the species order
 with open('GRI_species_order_lu13', 'r') as f:
-    # species = f.readlines()
     # print(species)
     labels = f.read().splitlines()
 
@@ -89,7 +88,7 @@ x = Dense(n_neuron, activation='relu')(inputs)
 x = res_block_org(x,  n_neuron, stage=1, block='a', bn=batch_norm)
 x = res_block_org(x,  n_neuron, stage=1, block='b', bn=batch_norm)
 x = res_block_org(x,  n_neuron, stage=1,  block='c', bn=batch_norm)
-# x = res_block_org(x,  n_neuron, stage=1,  block='d', bn=batch_norm)
+x = res_block_org(x,  n_neuron, stage=1,  block='d', bn=batch_norm)
 
 
 predictions = Dense(dim_label, activation='linear')(x)
@@ -221,7 +220,7 @@ print('Training took %i sec.' % (t_end-t_start) )
 
 # save the loss history
 losses_df = pd.DataFrame(np.array([history.history['acc'],history.history['val_acc']]).T,columns=['acc','val_acc'])
-losses_df.to_csv('3_Block_Nets/losses_%i_%iepochs.csv' % (n_neuron, this_epoch))
+losses_df.to_csv('4_Blocks_Nets/losses_%i_%iepochs.csv' % (n_neuron, this_epoch))
 
 # Convert the model to
 #run -i k2tf.py --input_model='FPV_ANN_tabulated_Standard.H5' --output_model='exported/FPV_ANN_tabulated_Standard.pb'
