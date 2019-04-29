@@ -65,4 +65,6 @@ nr_features         15;
 input_layer         //input_1;
 output_layer        //dense_2;
 
+out_scaler             cbrt_std;
+
 // ************************************************************************* //

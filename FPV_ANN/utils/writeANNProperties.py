@@ -1,6 +1,6 @@
 import os
 
-def writeANNProperties(in_scaler,out_scaler,scaler):
+def writeANNProperties(in_scaler,out_scaler,scaler,o_scaler_name):
     try:
         assert os.path.isdir('ANNProperties')
     except:
@@ -41,6 +41,9 @@ def writeANNProperties(in_scaler,out_scaler,scaler):
         ANNProperties.write('\ninput_layer         //input_1;\n')
         ANNProperties.write('output_layer        //dense_2;\n')
 
+        ANNProperties.write('\n')
+        ANNProperties.write('out_scaler             %s;\n' % o_scaler_name)
+
     elif scaler == 'MinMax':
         ANNProperties.write('\nin_scale\n')
         ANNProperties.write('{\n')
@@ -64,8 +67,11 @@ def writeANNProperties(in_scaler,out_scaler,scaler):
         # write nr of species
         ANNProperties.write('nr_features         %i;\n' % len(out_scaler.data_max_))
 
-        ANNProperties.write('\ninput_layer         //input_1;\n')
-        ANNProperties.write('output_layer        //dense_2;\n')
+        ANNProperties.write('\ninput_layer       input_1;\n')
+        ANNProperties.write('output_layer        output_1;\n')
+
+        ANNProperties.write('\n')
+        ANNProperties.write('out_scaler             %s;\n' % o_scaler_name)
 
     ANNProperties.write('\n// ************************************************************************* //')
 

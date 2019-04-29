@@ -23,7 +23,7 @@ import time
 
 ##########################
 # Parameters
-n_neuron = 250
+n_neuron = 100
 branches = 3
 scale = 3
 batch_size = 1024 #512
@@ -34,6 +34,7 @@ batch_norm = False
 # define the type of scaler: MinMax or Standard
 scaler = 'Standard' # 'Standard' 'MinMax'
 
+o_scaler = 'cbrt_std'   #string: which output scaler function is used
 ##########################
 
 # read in the species order
@@ -64,7 +65,7 @@ X, y, df, in_scaler, out_scaler = read_h5_data('./data/tables_of_fgm.h5',
                                                input_features=input_features,
                                                labels=labels,
                                                i_scaler='std2',
-                                               o_scaler='cbrt_std')
+                                               o_scaler=o_scaler)
                                                 #('./data/tables_of_fgm.h5',key='of_tables',
                                                 # in_labels=input_features, labels = labels,scaler=scaler)
 
@@ -80,15 +81,15 @@ dim_label = y_train.shape[1]
 
 
 # This returns a tensor
-inputs = Input(shape=(dim_input,))#,name='input_1')
+inputs = Input(shape=(dim_input,),name='input_1')
 
 # a layer instance is callable on a tensor, and returns a tensor
-x = Dense(n_neuron, activation='relu',name='input_1')(inputs)
+x = Dense(n_neuron, activation='relu')(inputs)
 
 x = res_block_org(x,  n_neuron, stage=1, block='a', bn=batch_norm)
 x = res_block_org(x,  n_neuron, stage=1, block='b', bn=batch_norm)
-x = res_block_org(x,  n_neuron, stage=1,  block='c', bn=batch_norm)
-x = res_block_org(x,  n_neuron, stage=1,  block='d', bn=batch_norm)
+# x = res_block_org(x,  n_neuron, stage=1,  block='c', bn=batch_norm)
+# x = res_block_org(x,  n_neuron, stage=1,  block='d', bn=batch_norm)
 
 
 predictions = Dense(dim_label, activation='linear',name='output_1')(x)
@@ -213,14 +214,16 @@ saver.save(sess, './exported/my_model')
 model.save('FPV_ANN_tabulated_%s_%i.H5' % (scaler,n_neuron))
 
 # write the OpenFOAM ANNProperties file
-writeANNProperties(in_scaler,out_scaler,scaler)
+writeANNProperties(in_scaler,out_scaler,scaler,o_scaler)
 
 print('Training took %i sec.' % (t_end-t_start) )
 
 
 # save the loss history
-losses_df = pd.DataFrame(np.array([history.history['acc'],history.history['val_acc']]).T,columns=['acc','val_acc'])
-losses_df.to_csv('4_Blocks_Nets/losses_%i_%iepochs.csv' % (n_neuron, this_epoch))
+losses_df = pd.DataFrame(np.array([history.history['acc'],history.history['val_acc'],history.history['loss'],history.history['val_loss']]).T,
+                         columns=['acc','val_acc','loss','val_loss'])
+
+losses_df.to_csv('2_Block_Nets/losses_%i_%iepochs.csv' % (n_neuron, this_epoch))
 
 # Convert the model to
 #run -i k2tf.py --input_model='FPV_ANN_tabulated_Standard.H5' --output_model='exported/FPV_ANN_tabulated_Standard.pb'
