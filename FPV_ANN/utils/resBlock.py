@@ -1,7 +1,7 @@
-from keras.models import Model
-from keras.layers import Dense, Activation, Input, BatchNormalization, Dropout, concatenate
-from keras import layers
-from keras.callbacks import ModelCheckpoint
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, Activation, Input, BatchNormalization, Dropout, concatenate
+from tensorflow.keras import layers
+from tensorflow.keras.callbacks import ModelCheckpoint
 
 
 

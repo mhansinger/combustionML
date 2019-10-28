@@ -5,6 +5,10 @@
 *.csv
 *.pdf
 
+scatter_plots
+tmp
+plots_3D
+
 *.key
 
 *.hdf5
