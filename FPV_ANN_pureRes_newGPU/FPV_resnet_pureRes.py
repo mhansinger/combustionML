@@ -1,3 +1,9 @@
+'''
+This code version is written for TF 2.0.0
+
+date: Nov 2019
+'''
+
 import os
 import numpy as np
 import pandas as pd
@@ -6,9 +12,9 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
-from keras.models import Model
-from keras.layers import Dense, Input, Dropout
-from keras.callbacks import ModelCheckpoint
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, Input, Dropout
+from tensorflow.keras.callbacks import ModelCheckpoint
 
 
 from utils.resBlock import res_block, res_block_org
