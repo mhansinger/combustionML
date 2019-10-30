@@ -30,13 +30,15 @@ print(out_labels)
 out_array = np.empty([0, len(out_labels)])
 in_array = np.empty([0, 4])
 
+df_reduced = df_all[in_labels+out_labels]
+
 # reduce resolution in f and pv space
-reduced_coordinates = np.linspace(0,1,101) # factor 10 to original resolution
-df_reduced=df_all[df_all['f'].isin(reduced_coordinates)]
-df_reduced=df_reduced[df_reduced['pv'].isin(reduced_coordinates)]
+coarsed_coordinates = np.linspace(0,1,101) # factor 5 to original resolution
+df_coarsed = df_reduced[df_all['f'].isin(coarsed_coordinates)]
+df_coarsed = df_coarsed[df_coarsed['pv'].isin(coarsed_coordinates)]
 
 def expand_data(
-    df_input=df_all, input_labels=in_labels, output_labels=out_labels, new_dim="4th"
+    df_input, input_labels=in_labels, output_labels=out_labels, new_dim="4th"
 ):
     out_array = np.empty([0, len(output_labels)])
     in_array = np.empty([0, 4])
@@ -57,7 +59,11 @@ def expand_data(
     return df_4d
 
 
-df_4d = expand_data(df_reduced)
+df_4d = expand_data(df_input = df_coarsed)
+
+# %%
+df_4d.to_csv('table_reduced_4D.csv')
+df_coarsed.to_csv('table_reduced_3D.csv')
 
 # # %%
 # px.scatter_3d(

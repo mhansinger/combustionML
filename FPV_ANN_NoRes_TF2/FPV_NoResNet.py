@@ -17,7 +17,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input, Dropout
 from tensorflow.keras.callbacks import ModelCheckpoint
 
-from utils.resBlock import res_block, res_block_org
+from utils.resBlock import NoRes_block
 from utils.data_reader import read_hdf_data, read_hdf_data_psi, read_h5_data
 from utils.writeANNProperties import writeANNProperties
 from utils.customObjects import coeff_r2, SGDRScheduler
@@ -95,10 +95,10 @@ for n_neuron in n_neurons:
     # a layer instance is callable on a tensor, and returns a tensor
     x = Dense(n_neuron, activation="relu")(inputs)
 
-    x = res_block_org(x, n_neuron, stage=1, block="a", bn=batch_norm)
-    x = res_block_org(x, n_neuron, stage=1, block="b", bn=batch_norm)
-    x = res_block_org(x, n_neuron, stage=1, block="c", bn=batch_norm)
-    x = res_block_org(x,  n_neuron, stage=1,  block='d', bn=batch_norm)
+    x = NoRes_block(x, n_neuron, stage=1, block="a", bn=batch_norm)
+    x = NoRes_block(x, n_neuron, stage=1, block="b", bn=batch_norm)
+    x = NoRes_block(x, n_neuron, stage=1, block="c", bn=batch_norm)
+    x = NoRes_block(x,  n_neuron, stage=1,  block='d', bn=batch_norm)
 
     predictions = Dense(dim_label, activation="linear", name="output_1")(x)
 
