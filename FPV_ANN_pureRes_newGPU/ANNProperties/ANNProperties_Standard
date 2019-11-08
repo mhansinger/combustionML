@@ -60,10 +60,12 @@ out_14_var       1.1661353060101767;
 out_15_mean      2.7951803349889142;
 out_15_var       3.1225226020677006;
 }
-nr_features         15;
+nr_features          15;
+
+runningMode         gpu;
 
 input_layer         //input_1;
-output_layer        //dense_2;
+output_layer          //output_1; //dense_2;
 
 out_scaler             cbrt_std;
 

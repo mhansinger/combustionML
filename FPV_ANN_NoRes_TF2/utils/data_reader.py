@@ -241,6 +241,23 @@ def read_h5_data(fileName, input_features=['zeta','f','pv'], labels = ['T','CH4'
     return np.array(input_np), np.array(label_np), df_o, in_scaler, out_scaler
 
 
+def read_h5_data_PV0(fileName, input_features=['zeta','f','pv'], labels = ['T','CH4','O2','CO2','CO','H2O','H2','OH','PVs'],i_scaler='no',o_scaler='no'):
+    df = pd.read_hdf(fileName)
+    df = df.clip(lower=0)
+    df_o = df[df['pv']!=0]
+
+    print('Outputs: ',labels)
+
+    input_df=df[input_features]
+    in_scaler = data_scaler()
+    input_np = in_scaler.fit_transform(input_df,i_scaler)
+
+    label_df=df[labels]
+    out_scaler = data_scaler()
+    label_np = out_scaler.fit_transform(label_df,o_scaler)
+
+    return np.array(input_np), np.array(label_np), df_o, in_scaler, out_scaler
+
 def read_hdf_data(path = 'premix_data',key='of_tables',in_labels=['zeta','f','pv'], labels = ['T'],scaler=None):
     # read in the hdf5 file
     try:

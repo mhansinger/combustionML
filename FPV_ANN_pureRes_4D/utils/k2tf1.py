@@ -13,16 +13,16 @@ holds both the model architecture and its associated weights.
 # tf.disable_v2_behavior()
 
 
-#import tensorflow as tf
+import tensorflow as tf
 from tensorflow.python.framework import graph_util
 from tensorflow.python.framework import graph_io
 from pathlib import Path
 from absl import app
 from absl import flags
 from absl import logging
-import keras
-from keras import backend as K
-from keras.models import model_from_json
+import tensorflow.keras
+from tensorflow.keras import backend as K
+from tensorflow.keras.models import model_from_json
 
 
 K.set_learning_phase(0)
@@ -68,7 +68,7 @@ def load_model(input_model_path, input_json_path):
         raise FileNotFoundError(
             'Model file `{}` does not exist.'.format(input_model_path))
     try:
-        model = keras.models.load_model(input_model_path,custom_objects={'coeff_r2':coeff_r2})
+        model = tensorflow.keras.models.load_model(input_model_path,custom_objects={'coeff_r2':coeff_r2})
         return model
     except FileNotFoundError as err:
         logging.error('Input mode file (%s) does not exist.', FLAGS.input_model)
