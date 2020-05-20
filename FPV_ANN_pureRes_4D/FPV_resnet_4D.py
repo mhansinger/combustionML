@@ -29,12 +29,12 @@ import time
 
 ##########################
 # Parameters
-n_neurons = [100]#[100,200,300]
+n_neurons = [100] #[100,200,300]
 resBlocks_list = [4]
 
 branches = 3
 scale = 3
-batch_size = 1024 * 1  # 512
+batch_size = 1024 * 10  # 512
 this_epoch = 2046
 vsplit = 0.1
 batch_norm = False
@@ -67,11 +67,11 @@ print(labels)
 
 # DO NOT CHANGE THIS ORDER!!
 input_features = ["f", "zeta", "pv"]
-#input_features = ["f", "zeta", "pv",'4th']
+input_features = ["f", "zeta", "pv","4th"]
 
 # read in the data
 X, y, df, in_scaler, out_scaler = read_h5_data_PV0(
-    "table_reduced_3D.h5",
+    "table_reduced_4D.h5",
     input_features=input_features,
     labels=labels,
     i_scaler="std2",
@@ -87,7 +87,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
 
 for blocks in resBlocks_list:
 
-    blocks_name = str(blocks)+'_Block_Nets_3D'
+    blocks_name = str(blocks)+'_Block_Nets_4D'
 
     # check if directory exists
     if not os.path.isdir(blocks_name):

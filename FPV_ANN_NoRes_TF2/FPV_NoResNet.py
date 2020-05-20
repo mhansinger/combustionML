@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 
 #######################
 # Force to use on CPU
-# os.environ["CUDA_VISIBLE_DEVICES"]="-1"
+os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 ######################
 
 import tensorflow as tf
@@ -34,12 +34,12 @@ import time
 
 ##########################
 # Parameters
-n_neurons = [100,200,300]
-resBlocks_list = [12,15]
+n_neurons = [300]
+resBlocks_list = [12]
 
 branches = 3
 scale = 3
-batch_size = 1024 * 8  # 512
+batch_size = 1024 * 4  # 512
 this_epoch = 2046
 vsplit = 0.1
 batch_norm = False

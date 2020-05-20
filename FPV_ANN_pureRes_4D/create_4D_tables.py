@@ -32,23 +32,24 @@ in_array = np.empty([0, 4])
 
 df_reduced = df_all[in_labels+out_labels]
 
+# %%
 # reduce resolution in f and pv space
 coarsed_coordinates = np.linspace(0,1, 101) # factor 5 to original resolution
 df_coarsed = df_reduced[df_all['f'].isin(coarsed_coordinates)]
 df_coarsed = df_coarsed[df_coarsed['pv'].isin(coarsed_coordinates)]
 
-def expand_data(
-    df_input, input_labels=in_labels, output_labels=out_labels, new_dim="4th"
-):
+def expand_data_4D(
+    df_input, input_labels=in_labels, output_labels=out_labels, new_dim="4th"):
+
     out_array = np.empty([0, len(output_labels)])
     in_array = np.empty([0, 4])
 
 
     for i in range(1,points_new_dim+1):
-        tmp = df_input[out_labels].values * i
+        tmp = df_input[out_labels].values * np.exp(i*0.1)
         out_array = np.vstack([out_array, tmp])
 
-        df_input[new_dim] = i
+        df_input[new_dim] = i*0.1
         tmp_in = df_input[input_labels + [new_dim]].values
         in_array = np.vstack([in_array, tmp_in])
 
@@ -59,7 +60,30 @@ def expand_data(
     return df_4d
 
 
-df_4d = expand_data(df_input = df_coarsed)
+# def expand_data_5D(
+#     df_input, input_labels=in_labels, output_labels=out_labels, new_dim="5th"):
+#
+#     out_array = np.empty([0, len(output_labels)])
+#     in_array = np.empty([0, 5])
+#
+#     for i in range(1,points_new_dim+1):
+#         #tmp1 = df_input[out_labels].values * np.exp(i*0.1)
+#         tmp2 = df_input[out_labels].values * np.cos(i*0.1)
+#         out_array = np.vstack([out_array, tmp2])
+#
+#         df_input[new_dim] = i*0.1
+#         tmp_in = df_input[input_labels + [new_dim]].values
+#         in_array = np.vstack([in_array, tmp_in])
+#
+#     df_out = pd.DataFrame(out_array, columns=output_labels)
+#     df_in = pd.DataFrame(in_array, columns=input_labels + [new_dim])
+#
+#     df_5d = pd.concat([df_in, df_out], axis=1)
+#     return df_5d
+
+
+df_4d = expand_data_4D(df_input = df_coarsed)
+# df_5d = expand_data_5D(df_input = df_4d,input_labels=in_labels.append('4th'))
 
 # %%
 
